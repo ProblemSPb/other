@@ -1,0 +1,92 @@
+// // It takes the data from the excel sheet, fills it into a pre-defined template, then creates a separate doc with all data filled.
+
+// "https://docs.google.com/document/d/1bmu24avWK06NlgAAJJdwSJxu-9nvCkK3mXxGNk8CdQ0/edit" --> this is the url of the contract template
+// it is important to out placeholders (words that start with "key") to where we gonna then put our data from spreadsheets.
+
+function fromSheet() {
+  
+  var spreadsheet = SpreadsheetApp.getActiveSheet();
+  
+  // below is the key to the doc we gonna use as the template
+  var docTemplate = "1bmu24avWK06NlgAAJJdwSJxu-9nvCkK3mXxGNk8CdQ0"; 
+  
+  // Below is the name of our future documents. Later we'll add the new hire's name to the title.
+  
+  var docName = "GYG Contract";
+  
+  // getting values from the spreadsheet
+  spreadsheet = spreadsheet.getDataRange().getValues();
+  
+  // this peace of code loops through the lines in the google sheet
+  for (var i=1; i < spreadsheet.length; i++) {
+    
+    var data = spreadsheet[i];
+  
+  // This sets the code to understand our data from the sheet as the variables. 
+  var Firstname = data[0];
+  var Lastname = data[1];
+  var Gender = data[2];
+  var Title = data[3];
+  var Hiredate = data[4];
+  var dateFormated = Hiredate.toISOString().substr(0,10).replace(/-/g, '/');
+  var Salary = data[5];
+  var Monthlysalary = Math.round(parseInt(Salary, 10)/12);
+  
+  //getting current date
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; //January is 0!
+  var yyyy = today.getFullYear();
+
+  if(dd<10) {
+    dd = '0'+dd
+  } 
+
+  if(mm<10) {
+    mm = '0'+mm
+  } 
+  
+  today = yyyy + '/' + mm + '/' + dd;
+  
+  // This code opens the doc and names it what you wanted it named above.
+  var copyId = DriveApp.getFileById(docTemplate)
+  .makeCopy(docName+' for '+ Firstname + ' ' + Lastname)
+  .getId();
+  
+  // Open a new document
+  var copyDoc = DocumentApp.openById(copyId);
+  
+  // Get our document’s body section
+  var copyBody = copyDoc.getActiveSection();
+
+  // This code reads through the Google Doc and replaces each keyword with the variable (data from the sheet).
+  
+  copyBody.replaceText('keyFirstname',Firstname);
+  copyBody.replaceText('keyLastname',Lastname);
+  copyBody.replaceText('keyTitle',Title);
+  copyBody.replaceText('keyHiredate',dateFormated);
+  copyBody.replaceText('keySalary',Salary);
+  copyBody.replaceText('keyTodaydate',today);
+  copyBody.replaceText('keyMonthlysalary',Monthlysalary);
+  
+  // putting the correct pronouns depending if it's "Female" or "Male"
+  if(Gender == "Female") {
+    copyBody.replaceText('keyHeShe',"She");
+    copyBody.replaceText('keyHisHer',"Her");
+    copyBody.replaceText('keyErSie',"Sie");
+    copyBody.replaceText('keySeinIhr',"Ihr");
+  }
+  else {
+    copyBody.replaceText('keyHeShe',"He");
+    copyBody.replaceText('keyHisHer',"His");
+    copyBody.replaceText('keyErSie',"Er");
+    copyBody.replaceText('keySeinIhr',"Sein");
+  }
+  
+  // Save and close our new document
+  copyDoc.saveAndClose();
+  
+    }
+}
+
+fromSheet();
